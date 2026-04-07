@@ -1,11 +1,20 @@
 package com.finance.demo.controller;
 
-
+import com.finance.demo.dtos.request.FinancialRecordRequest;
+import com.finance.demo.dtos.response.ApiResponse.FinancialRecordResponse;
+import com.finance.demo.dtos.response.ApiResponse.PagedResponse;
+import com.finance.demo.entities.TransactionType;
+import com.finance.demo.service.FinancialRecordService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.*;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.http.*;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -29,7 +38,9 @@ public class FinancialRecordController {
                 .body(recordService.createRecord(request, userDetails.getUsername()));
     }
 
-
+    /**
+     * GET /api/v1/records — Authenticated users (with filters & pagination)
+     */
     @GetMapping
     public ResponseEntity<PagedResponse<FinancialRecordResponse>> getRecords(
             @RequestParam(required = false) TransactionType type,
@@ -44,15 +55,10 @@ public class FinancialRecordController {
             @RequestParam(defaultValue = "transactionDate") String sort,
             @RequestParam(defaultValue = "DESC") Sort.Direction direction
     ) {
-
         // Limit page size to prevent abuse
         int safeSize = Math.min(size, 100);
 
-        Pageable pageable = PageRequest.of(
-                page,
-                safeSize,
-                Sort.by(direction, sort)
-        );
+        Pageable pageable = PageRequest.of(page, safeSize, Sort.by(direction, sort));
 
         return ResponseEntity.ok(
                 recordService.getRecords(type, category, dateFrom, dateTo, search, pageable)

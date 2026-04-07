@@ -1,17 +1,22 @@
 package com.finance.demo.service;
 
-import com.finance.backend.dto.request.FinancialRecordRequest;
-import com.finance.backend.dto.response.ApiResponse.*;
-import com.finance.backend.entity.*;
-import com.finance.backend.exception.AppException;
-import com.finance.backend.repository.*;
-import com.finance.backend.service.FinancialRecordService;
+import com.finance.demo.dtos.request.FinancialRecordRequest;
+import com.finance.demo.dtos.response.ApiResponse.FinancialRecordResponse;
+import com.finance.demo.dtos.response.ApiResponse.PagedResponse;
+import com.finance.demo.entities.FinancialRecord;
+import com.finance.demo.entities.TransactionType;
+import com.finance.demo.entities.User;
+import com.finance.demo.exception.AppException;
+import com.finance.demo.repository.FinancialRecordRepository;
+import com.finance.demo.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.*;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
@@ -51,22 +56,15 @@ public class FinancialRecordServiceImpl implements FinancialRecordService {
             String search,
             Pageable pageable
     ) {
-
         if (dateFrom != null && dateTo != null && dateFrom.isAfter(dateTo)) {
             throw new AppException.InvalidOperationException("dateFrom must not be after dateTo");
         }
 
-        // Normalize optional inputs
         String normalizedCategory = category != null ? category.trim() : null;
         String normalizedSearch = search != null ? search.trim() : null;
 
         Page<FinancialRecord> page = recordRepository.findAllWithFilters(
-                type,
-                normalizedCategory,
-                dateFrom,
-                dateTo,
-                normalizedSearch,
-                pageable
+                type, normalizedCategory, dateFrom, dateTo, normalizedSearch, pageable
         );
 
         return PagedResponse.<FinancialRecordResponse>builder()
@@ -91,24 +89,13 @@ public class FinancialRecordServiceImpl implements FinancialRecordService {
 
         FinancialRecord record = findActiveOrThrow(id);
 
-        // Partial update
-        if (request.getAmount() != null) {
-            record.setAmount(request.getAmount());
-        }
-        if (request.getType() != null) {
-            record.setType(request.getType());
-        }
-        if (request.getCategory() != null) {
-            record.setCategory(request.getCategory().trim());
-        }
-        if (request.getTransactionDate() != null) {
-            record.setTransactionDate(request.getTransactionDate());
-        }
-        if (request.getNotes() != null) {
-            record.setNotes(request.getNotes());
-        }
+        if (request.getAmount() != null)          record.setAmount(request.getAmount());
+        if (request.getType() != null)            record.setType(request.getType());
+        if (request.getCategory() != null)        record.setCategory(request.getCategory().trim());
+        if (request.getTransactionDate() != null) record.setTransactionDate(request.getTransactionDate());
+        if (request.getNotes() != null)           record.setNotes(request.getNotes());
 
-        return toResponse(record); // no need to explicitly save
+        return toResponse(record); // dirty-checking saves automatically
     }
 
     @Override

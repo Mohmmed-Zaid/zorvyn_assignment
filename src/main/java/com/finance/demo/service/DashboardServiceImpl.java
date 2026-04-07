@@ -1,9 +1,8 @@
-package com.finance.backend.service.impl;
+package com.finance.demo.service;
 
-import com.finance.backend.dto.response.ApiResponse.*;
-import com.finance.backend.entity.*;
-import com.finance.backend.repository.FinancialRecordRepository;
-import com.finance.backend.service.DashboardService;
+import com.finance.demo.dtos.response.ApiResponse.*;
+import com.finance.demo.entities.TransactionType;
+import com.finance.demo.repository.FinancialRecordRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;

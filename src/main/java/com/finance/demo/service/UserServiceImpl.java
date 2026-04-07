@@ -1,23 +1,26 @@
 package com.finance.demo.service;
 
+import com.finance.demo.dtos.request.UserRequest;
+import com.finance.demo.dtos.response.ApiResponse.UserResponse;
+import com.finance.demo.entities.User;
+import com.finance.demo.exception.AppException;
 import com.finance.demo.repository.UserRepository;
-import com.finance.demo.security.UserService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
-public class UserServiceImpl extends UserService {
+public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
 
-
     @Override
+    @Transactional(readOnly = true)
     public Page<UserResponse> getAllUsers(Pageable pageable) {
-        return userRepository.findAll(pageable)
-                .map(this::toResponse);
+        return userRepository.findAll(pageable).map(this::toResponse);
     }
 
     @Override
@@ -30,10 +33,6 @@ public class UserServiceImpl extends UserService {
     @Transactional
     public UserResponse updateRole(Long id, UserRequest.UpdateRole request) {
         User user = findOrThrow(id);
-
-        // Optional: prevent changing own role (security)
-        // if (user.getId().equals(currentUserId)) throw ...
-
         user.setRole(request.getRole());
         return toResponse(userRepository.save(user));
     }
@@ -42,10 +41,6 @@ public class UserServiceImpl extends UserService {
     @Transactional
     public UserResponse updateStatus(Long id, UserRequest.UpdateStatus request) {
         User user = findOrThrow(id);
-
-        // Optional: prevent disabling self
-        // if (user.getId().equals(currentUserId)) throw ...
-
         user.setActive(request.getActive());
         return toResponse(userRepository.save(user));
     }

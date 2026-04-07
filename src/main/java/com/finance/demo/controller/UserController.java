@@ -1,10 +1,17 @@
 package com.finance.demo.controller;
 
-
+import com.finance.demo.dtos.request.UserRequest;
+import com.finance.demo.dtos.response.ApiResponse.PagedResponse;
+import com.finance.demo.dtos.response.ApiResponse.UserResponse;
+import com.finance.demo.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -14,6 +21,9 @@ public class UserController {
 
     private final UserService userService;
 
+    /**
+     * GET /api/v1/users — ADMIN only
+     */
     @GetMapping("/users")
     public ResponseEntity<PagedResponse<UserResponse>> getAllUsers(
             @RequestParam(defaultValue = "0") int page,
@@ -66,14 +76,12 @@ public class UserController {
     }
 
     /**
-     * GET /api/v1/me — Authenticated users
+     * GET /api/v1/me — Any authenticated user
      */
     @GetMapping("/me")
     public ResponseEntity<UserResponse> getMyProfile(
             @AuthenticationPrincipal UserDetails userDetails
     ) {
-        return ResponseEntity.ok(
-                userService.getMyProfile(userDetails.getUsername())
-        );
+        return ResponseEntity.ok(userService.getMyProfile(userDetails.getUsername()));
     }
 }

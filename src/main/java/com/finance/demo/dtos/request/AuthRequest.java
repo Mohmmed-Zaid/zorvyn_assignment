@@ -30,5 +30,9 @@ public class AuthRequest {
         @NotBlank(message = "Password is required")
         @Size(min = 8, message = "Password must be at least 8 characters")
         private String password;
+
+        // Required by AuthService — must match password
+        @NotBlank(message = "Please confirm your password")
+        private String confirmPassword;
     }
 }

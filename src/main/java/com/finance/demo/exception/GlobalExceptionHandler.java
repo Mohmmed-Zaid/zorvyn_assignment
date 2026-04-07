@@ -4,6 +4,8 @@ import com.finance.demo.dtos.response.ApiResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -39,7 +41,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(BadCredentialsException.class)
-    public ResponseEntity<ErrorResponse> handleBadCredentials(BadCredentialsException ex) {
+    public ResponseEntity<ApiResponse.ErrorResponse> handleBadCredentials(BadCredentialsException ex) {
         // Deliberately vague — don't reveal whether email or password was wrong
         return buildResponse(HttpStatus.UNAUTHORIZED, "Unauthorized", "Invalid email or password", null);
     }
@@ -49,7 +51,7 @@ public class GlobalExceptionHandler {
      * can highlight individual form fields.
      */
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErrorResponse> handleValidation(MethodArgumentNotValidException ex) {
+    public ResponseEntity<ApiResponse.ErrorResponse> handleValidation(MethodArgumentNotValidException ex) {
         Map<String, String> fieldErrors = new HashMap<>();
         for (FieldError error : ex.getBindingResult().getFieldErrors()) {
             fieldErrors.put(error.getField(), error.getDefaultMessage());
@@ -63,7 +65,7 @@ public class GlobalExceptionHandler {
      * Logs the full stack trace server-side but returns a generic message to the client.
      */
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<Object> handleGeneric(Exception ex) {
+    public ResponseEntity<ApiResponse.ErrorResponse> handleGeneric(Exception ex) {
         log.error("Unexpected error", ex);
         return buildResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Internal Server Error",
                 "An unexpected error occurred. Please try again.", null);
@@ -71,7 +73,7 @@ public class GlobalExceptionHandler {
 
     // ---- Helper ----
 
-    private ResponseEntity<Object> buildResponse(
+    private ResponseEntity<ApiResponse.ErrorResponse> buildResponse(
             HttpStatus status, String error, String message, Map<String, String> fieldErrors) {
         ApiResponse.ErrorResponse body = ApiResponse.ErrorResponse.builder()
                 .status(status.value())

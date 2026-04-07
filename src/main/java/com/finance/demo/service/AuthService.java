@@ -1,7 +1,18 @@
 package com.finance.demo.service;
 
-
+import com.finance.demo.dtos.request.AuthRequest;
+import com.finance.demo.dtos.response.ApiResponse.AuthResponse;
+import com.finance.demo.dtos.response.ApiResponse.UserResponse;
+import com.finance.demo.entities.Role;
+import com.finance.demo.entities.User;
+import com.finance.demo.exception.AppException;
+import com.finance.demo.repository.UserRepository;
+import com.finance.demo.security.JwtUtils;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,7 +39,6 @@ public class AuthService {
             );
         }
 
-        // Optional: confirm password check
         if (!request.getPassword().equals(request.getConfirmPassword())) {
             throw new AppException.InvalidOperationException("Passwords do not match");
         }
@@ -43,7 +53,7 @@ public class AuthService {
 
         userRepository.save(user);
 
-        return buildAuthResponse(jwtUtils.generateToken(user), user);
+        return buildAuthResponse(jwtUtils.generateToken((UserDetails) user), user);
     }
 
     public AuthResponse login(AuthRequest.Login request) {
@@ -61,7 +71,7 @@ public class AuthService {
             throw new AppException.AccessDeniedException("Account is deactivated");
         }
 
-        return buildAuthResponse(jwtUtils.generateToken(user), user);
+        return buildAuthResponse(jwtUtils.generateToken((UserDetails) user), user);
     }
 
     private AuthResponse buildAuthResponse(String token, User user) {
